@@ -85,7 +85,8 @@ public class ChessMatch {
     }
 
     private Piece makeMove(Position source, Position target){
-        Piece piece = board.removePiece(source);
+        ChessPiece piece = (ChessPiece) board.removePiece(source);
+        piece.increaseMoveCount();
         Piece capturedPiece = board.removePiece(target);
         board.placePiece(piece,target);
 
@@ -98,8 +99,9 @@ public class ChessMatch {
     }
 
     private void undoMove(Position source, Position target, Piece capturedPiece){
-        Piece p = board.removePiece(target);
-        board.placePiece(p, target);
+        ChessPiece piece = (ChessPiece)board.removePiece(target);
+        piece.decreaseMoveCount();
+        board.placePiece(piece, source);
 
         if(capturedPiece != null){
             board.placePiece(capturedPiece, target);
@@ -148,7 +150,6 @@ public class ChessMatch {
     private boolean testCheck(Color color){
         Position kingPosition = king(color).getChessPosition().toPosition();
         List<Piece> opponentPieces = piecesOnTheBoard.stream().filter(x -> ((ChessPiece)x).getColor() == opponent(color)).toList();
-
         for (Piece p : opponentPieces){
             boolean[][] mat = p.possibleMoves();
             if(mat[kingPosition.getRow()][kingPosition.getColumn()]){
@@ -168,12 +169,11 @@ public class ChessMatch {
             for (int i=0; i< board.getRows(); i++){
                 for(int j=0; j< board.getColumns(); j++){
                     if(mat[i][j]){
-                        Position source = ((ChessPiece) p).getChessPosition().toPosition();
+                        Position source = ((ChessPiece)p).getChessPosition().toPosition();
                         Position target = new Position(i,j);
                         Piece capturedPiece = makeMove(source,target);
                         boolean testCheck = testCheck(color);
                         undoMove(source, target, capturedPiece);
-
                         if (!testCheck){
                             return false;
                         }
